@@ -1,0 +1,366 @@
+<!DOCTYPE HTML>
+<HTML lang="nl">
+<head>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js">\</script>
+    
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Turks Nederlands Leren</title>
+
+<style>
+body{
+font-family:Arial,sans-serif;
+background:#f3f6fb;
+padding:20px;
+text-align:center;
+}
+
+.container{
+max-width:800px;
+margin:auto;
+background:white;
+padding:25px;
+border-radius:15px;
+box-shadow:0 0 15px rgba(0,0,0,0.1);
+}
+
+h1{
+color:#2563eb;
+}
+
+.card{
+background:#eef4ff;
+padding:25px;
+border-radius:15px;
+margin-bottom:20px;
+}
+
+.word{
+font-size:42px;
+font-weight:bold;
+}
+
+button{
+padding:12px;
+margin:5px;
+border:none;
+border-radius:10px;
+background:#2563eb;
+color:white;
+cursor:pointer;
+font-size:16px;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+.answer{
+display:block;
+width:100%;
+margin-bottom:10px;
+}
+
+.good{
+color:green;
+font-size:24px;
+font-weight:bold;
+}
+
+.bad{
+color:red;
+font-size:24px;
+font-weight:bold;
+}
+
+.score{
+font-size:24px;
+margin-top:20px;
+}
+
+select{
+padding:10px;
+font-size:16px;
+border-radius:8px;
+margin-bottom:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📚 Turks → Nederlands</h1>
+
+<select id="category" onchange="changeCategory()">
+<option value="Alles">🎲 Alles</option>
+<option value="School">🏫 School</option>
+<option value="Dieren">🐶 Dieren</option>
+<option value="Eten">🍎 Eten</option>
+<option value="Familie">👨‍👩‍👧 Familie</option>
+<option value="Kleuren">🌈 Kleuren</option>
+</select>
+
+<div class="card">
+
+<div class="word" id="question">
+Laden...
+</div>
+
+<br><br>
+
+<button onclick="playTurkish()">
+🔊 Turks woord horen
+</button>
+
+</div>
+
+<div id="answers"></div>
+
+<p id="result"></p>
+
+<div class="score">
+⭐ Score: <span id="score">0</span>
+</div>
+
+<br>
+
+<button onclick="nextQuestion()">
+➡️ Volgende vraag
+</button>
+
+</div>
+
+<script>
+
+const categories = {
+
+School:[
+{tr:"Kitap",nl:"Boek"},
+{tr:"Okul",nl:"School"},
+{tr:"Öğretmen",nl:"Leraar"},
+{tr:"Kalem",nl:"Pen"},
+{tr:"Defter",nl:"Schrift"},
+{tr:"Masa",nl:"Tafel"},
+{tr:"Sandalye",nl:"Stoel"},
+{tr:"Silgi",nl:"Gum"},
+{tr:"Çanta",nl:"Tas"},
+{tr:"Ödev",nl:"Huiswerk"},
+{tr:"Sınıf",nl:"Klas"},
+{tr:"Tahta",nl:"Bord"},
+{tr:"Kağıt",nl:"Papier"},
+{tr:"Öğrenci",nl:"Leerling"},
+{tr:"Ders",nl:"Les"}
+],
+
+Dieren:[
+{tr:"Kedi",nl:"Kat"},
+{tr:"Köpek",nl:"Hond"},
+{tr:"Kuş",nl:"Vogel"},
+{tr:"Balık",nl:"Vis"},
+{tr:"At",nl:"Paard"},
+{tr:"İnek",nl:"Koe"},
+{tr:"Tavuk",nl:"Kip"},
+{tr:"Aslan",nl:"Leeuw"},
+{tr:"Kaplan",nl:"Tijger"},
+{tr:"Ayı",nl:"Beer"},
+{tr:"Maymun",nl:"Aap"},
+{tr:"Fil",nl:"Olifant"},
+{tr:"Zürafa",nl:"Giraf"},
+{tr:"Tavşan",nl:"Konijn"},
+{tr:"Fare",nl:"Muis"}
+],
+
+Eten:[
+{tr:"Elma",nl:"Appel"},
+{tr:"Armut",nl:"Peer"},
+{tr:"Muz",nl:"Banaan"},
+{tr:"Portakal",nl:"Sinaasappel"},
+{tr:"Çilek",nl:"Aardbei"},
+{tr:"Karpuz",nl:"Watermeloen"},
+{tr:"Su",nl:"Water"},
+{tr:"Süt",nl:"Melk"},
+{tr:"Ekmek",nl:"Brood"},
+{tr:"Peynir",nl:"Kaas"},
+{tr:"Yumurta",nl:"Ei"},
+{tr:"Et",nl:"Vlees"},
+{tr:"Domates",nl:"Tomaat"},
+{tr:"Patates",nl:"Aardappel"},
+{tr:"Sebze",nl:"Groente"}
+],
+
+Familie:[
+{tr:"Anne",nl:"Mama"},
+{tr:"Baba",nl:"Papa"},
+{tr:"Abi",nl:"Broer"},
+{tr:"Abla",nl:"Zus"},
+{tr:"Kardeş",nl:"Broer of zus"},
+{tr:"Bebek",nl:"Baby"},
+{tr:"Dede",nl:"Opa"},
+{tr:"Nine",nl:"Oma"},
+{tr:"Amca",nl:"Oom"},
+{tr:"Teyze",nl:"Tante"},
+{tr:"Kuzen",nl:"Neef"},
+{tr:"Arkadaş",nl:"Vriend"},
+{tr:"Komşu",nl:"Buur"},
+{tr:"Aile",nl:"Familie"},
+{tr:"Çocuk",nl:"Kind"}
+],
+
+Kleuren:[
+{tr:"Kırmızı",nl:"Rood"},
+{tr:"Mavi",nl:"Blauw"},
+{tr:"Yeşil",nl:"Groen"},
+{tr:"Sarı",nl:"Geel"},
+{tr:"Siyah",nl:"Zwart"},
+{tr:"Beyaz",nl:"Wit"},
+{tr:"Turuncu",nl:"Oranje"},
+{tr:"Pembe",nl:"Roze"},
+{tr:"Mor",nl:"Paars"},
+{tr:"Kahverengi",nl:"Bruin"},
+{tr:"Gri",nl:"Grijs"}
+]
+
+};
+
+let current;
+let score = 0;
+let words = [];
+
+function loadWords(){
+
+words=[];
+
+const selected =
+document.getElementById("category").value;
+
+if(selected==="Alles"){
+
+for(const category in categories){
+words = words.concat(categories[category]);
+}
+
+}else{
+
+words = categories[selected];
+}
+}
+
+function speak(text,lang){
+
+speechSynthesis.cancel();
+
+const speech =
+new SpeechSynthesisUtterance(text);
+
+speech.lang = lang;
+speech.rate = 0.8;
+
+speechSynthesis.speak(speech);
+}
+
+function playTurkish(){
+if(current){
+speak(current.tr,"tr-TR");
+}
+}
+
+function playDutch(){
+if(current){
+speak(current.nl,"nl-NL");
+}
+}
+
+function shuffle(arr){
+return arr.sort(()=>Math.random()-0.5);
+}
+
+function changeCategory(){
+loadWords();
+nextQuestion();
+}
+
+function nextQuestion(){
+
+document.getElementById("result").innerHTML="";
+
+current =
+words[Math.floor(Math.random()*words.length)];
+
+document.getElementById("question").innerHTML =
+current.tr;
+
+setTimeout(function(){
+    playTurkish();
+}, 500);
+
+let answers=[current.nl];
+
+while(answers.length<4){
+
+let random =
+words[Math.floor(Math.random()*words.length)].nl;
+
+if(!answers.includes(random)){
+answers.push(random);
+}
+
+}
+
+answers = shuffle(answers);
+
+let html="";
+
+answers.forEach(answer=>{
+
+html += `
+<button class="answer" onclick="checkAnswer('${answer}')">
+${answer}
+</button>
+`;
+
+});
+
+document.getElementById("answers").innerHTML = html;
+}
+
+function checkAnswer(answer){
+
+playDutch();
+
+if(answer===current.nl){
+
+score++;
+
+confetti({
+    particleCount: 150,
+    spread: 120,
+    origin: { y: 0.6 }
+});
+
+document.getElementById("result").innerHTML =
+"<div class='good' style='font-size:32px'>🎉 GOED GEDAAN! 🎉<br><br>⭐ +1 Ster<br>🏆 Super!</div>";
+
+
+}else{
+
+document.getElementById("result").innerHTML =
+"<div class='bad'>❌ Juiste antwoord: " +
+current.nl +
+"</div>";
+
+}
+
+document.getElementById("score").innerText = score;
+}
+
+loadWords();
+nextQuestion();
+
+</script>
+
+</body>
+</html>
